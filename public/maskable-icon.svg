@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MemoryMusic cassette">
+  <rect width="512" height="512" fill="#14213D"/>
+  <rect x="76" y="92" width="360" height="328" rx="70" fill="#FFC857"/>
+  <rect x="124" y="153" width="264" height="158" rx="52" fill="#BDE8F2" stroke="#14213D" stroke-width="22"/>
+  <circle cx="193" cy="232" r="40" fill="#F5FAFF" stroke="#14213D" stroke-width="17"/>
+  <circle cx="319" cy="232" r="40" fill="#F5FAFF" stroke="#14213D" stroke-width="17"/>
+  <path d="M170 343h172l23 55H147l23-55Z" fill="#F26B5E" stroke="#14213D" stroke-width="18" stroke-linejoin="round"/>
+</svg>

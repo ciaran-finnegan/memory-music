@@ -1,0 +1,26 @@
+{
+  "name": "MemoryMusic — Learn it in a loop",
+  "short_name": "MemoryMusic",
+  "description": "Bilingual English and Indonesian musical memory lessons.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F5FAFF",
+  "theme_color": "#14213D",
+  "lang": "en",
+  "categories": ["education", "music"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/maskable-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
