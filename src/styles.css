@@ -36,7 +36,7 @@ a { color: inherit; }
 .language-route { min-height: 48px; display: flex; align-items: center; padding: 4px; border: 2px solid var(--ink); background: var(--white); border-radius: 999px; }
 .language-name { padding: 0 14px; font-size: 0.82rem; font-weight: 850; white-space: nowrap; }
 .target-language { color: #8f2d2c; }
-.language-route button { width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--pool); }
+.language-route button { width: 44px; height: 44px; flex: 0 0 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--pool); }
 .language-route button:hover { background: var(--mango); }
 .headphone-note { justify-self: end; display: flex; gap: 7px; align-items: center; color: var(--muted); font-size: 0.8rem; font-weight: 750; }
 
@@ -206,7 +206,7 @@ footer { padding: 24px 0 34px; border-top: 1px solid var(--line); color: var(--m
   .studio-panel { margin-top: 28px; border-radius: 24px 24px 7px 24px; box-shadow: 5px 5px 0 var(--ink); overflow: visible; }
   .studio-heading { padding: 22px 18px 18px; align-items: flex-end; }
   .studio-heading h2 { font-size: 1.8rem; }
-  .variation-button { width: 44px; padding: 0; }
+  .variation-button { width: 44px; min-width: 44px; flex: 0 0 44px; padding: 0; }
   .variation-button svg { margin: auto; }
   .variation-button { font-size: 0; }
   .player-layout > div:first-child { padding: 22px 18px; border-radius: 0; }

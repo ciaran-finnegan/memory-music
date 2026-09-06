@@ -53,4 +53,16 @@ describe("MemoryMusic learning studio", () => {
     expect(screen.getByRole("heading", { name: /quick recall/i })).toBeVisible();
     expect(screen.getByText(/choose the indonesian match/i)).toBeVisible();
   });
+
+  it("moves focus into the custom dialog and returns it when closed", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const trigger = screen.getByRole("button", { name: /custom lesson/i });
+
+    await user.click(trigger);
+    expect(screen.getByLabelText("English word 1")).toHaveFocus();
+
+    await user.keyboard("{Escape}");
+    expect(trigger).toHaveFocus();
+  });
 });

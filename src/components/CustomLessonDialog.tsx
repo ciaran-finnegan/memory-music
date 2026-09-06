@@ -1,5 +1,5 @@
 import { Plus, Trash2, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { validateCustomPairs, type CustomPairRow } from "../domain/customLesson";
 import type { Direction, Language } from "../domain/types";
 
@@ -16,13 +16,20 @@ export function CustomLessonDialog({ direction, initialRows, onClose, onSave }: 
   const [sourceLanguage, targetLanguage] = direction.split("-") as [Language, Language];
   const [rows, setRows] = useState<CustomPairRow[]>(initialRows.length >= 2 ? initialRows : blankRows);
   const [submitted, setSubmitted] = useState(false);
+  const firstInputRef = useRef<HTMLInputElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const validation = useMemo(() => validateCustomPairs(rows), [rows]);
   const languageLabel = (language: Language) => language === "en" ? "English" : "Indonesian";
 
   useEffect(() => {
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    firstInputRef.current?.focus();
     const handleKey = (event: KeyboardEvent) => event.key === "Escape" && onClose();
     window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+      previousFocusRef.current?.focus();
+    };
   }, [onClose]);
 
   const changeRow = (index: number, field: keyof CustomPairRow, value: string) => {
@@ -52,7 +59,7 @@ export function CustomLessonDialog({ direction, initialRows, onClose, onSave }: 
             <div className="custom-row" key={index}>
               <label>
                 <span>{languageLabel(sourceLanguage)} word {index + 1}</span>
-                <input value={row.source} onChange={(event) => changeRow(index, "source", event.target.value)} placeholder={sourceLanguage === "en" ? "e.g. red" : "mis. merah"} />
+                <input ref={index === 0 ? firstInputRef : undefined} value={row.source} onChange={(event) => changeRow(index, "source", event.target.value)} placeholder={sourceLanguage === "en" ? "e.g. red" : "mis. merah"} />
               </label>
               <label>
                 <span>{languageLabel(targetLanguage)} word {index + 1}</span>
