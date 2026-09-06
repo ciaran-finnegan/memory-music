@@ -20,7 +20,7 @@ export function SungSongPanel(props: SungSongPanelProps) {
     <section className="sung-song-card" aria-labelledby="sung-song-title">
       <div className="vocal-badge"><Sparkles aria-hidden="true" size={15} /> REAL VOCALS</div>
       <h3 id="sung-song-title">Hear the words sung</h3>
-      <p>A catchy bilingual song with a verse, chorus, and clear pronunciation.</p>
+      <p>A catchy bilingual song with a verse, chorus, and clear pronunciation. When it is ready, tap play to hear the vocals.</p>
 
       {props.status === "ready" && props.audioUrl ? (
         <audio

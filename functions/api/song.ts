@@ -1,16 +1,8 @@
 import { parseSongRequest, songFromRequest } from "../../src/domain/songRequest";
 import { buildVocalLyrics, buildVocalPrompt } from "../../src/domain/vocalSong";
+import { runMusicModel } from "../lib/cloudflareAi";
 
-interface Env {
-  AI: Ai;
-  SONGS: R2Bucket;
-  SONG_RATE_LIMIT: KVNamespace;
-}
-
-interface MusicResponse {
-  state?: string;
-  result?: { audio?: string };
-}
+type SongEnv = Env & { AI_API_TOKEN: string };
 
 function json(body: object, status = 200): Response {
   return Response.json(body, {
@@ -27,7 +19,7 @@ async function sha256(value: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+export const onRequestPost: PagesFunction<SongEnv> = async ({ request, env }) => {
   try {
     const contentLength = Number(request.headers.get("Content-Length") ?? 0);
     if (contentLength > 8_000) return json({ error: "That lesson is too large." }, 413);
@@ -47,20 +39,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       return json({ error: "Two new songs per day keeps this free for everyone. Try this song again tomorrow." }, 429);
     }
     const song = songFromRequest(input);
-    const ai = env.AI as unknown as {
-      run(model: string, values: Record<string, unknown>): Promise<MusicResponse>;
-    };
-    const generated = await ai.run("minimax/music-2.6", {
+    const generated = await runMusicModel({
+      accountId: env.AI_ACCOUNT_ID,
+      apiToken: env.AI_API_TOKEN,
       prompt: buildVocalPrompt(song, input.style),
       lyrics: buildVocalLyrics(song),
-      lyrics_optimizer: false,
-      is_instrumental: false,
-      format: "mp3",
     });
-    const upstreamUrl = generated.result?.audio;
-    if (generated.state !== "Completed" || !upstreamUrl) {
-      return json({ error: "The singer could not finish that take. Please try again." }, 502);
-    }
+    const upstreamUrl = generated.result.audio;
 
     const audioResponse = await fetch(upstreamUrl);
     if (!audioResponse.ok || !audioResponse.body) {
@@ -79,7 +64,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     if (message === "Invalid song request.") return json({ error: message }, 400);
-    console.error("song-generation-failed", error);
+    console.error(JSON.stringify({ event: "song-generation-failed", error: message }));
     return json({
       error: "Sung-song generation is temporarily unavailable. The instant practice beat still works.",
     }, 503);

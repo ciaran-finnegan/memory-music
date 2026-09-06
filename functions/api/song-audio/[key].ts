@@ -1,7 +1,3 @@
-interface Env {
-  SONGS: R2Bucket;
-}
-
 function parseRange(value: string, size: number): { offset: number; length: number } | null {
   const match = /^bytes=(\d*)-(\d*)$/.exec(value);
   if (!match) return null;

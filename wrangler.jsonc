@@ -3,9 +3,9 @@
   "name": "memory-music",
   "pages_build_output_dir": "./dist",
   "compatibility_date": "2026-09-06",
-  "ai": {
-    "binding": "AI",
-    "remote": true
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "AI_ACCOUNT_ID": "8d2b0d67bfcd46cf2e40eed93b716660"
   },
   "r2_buckets": [
     {
