@@ -59,11 +59,11 @@ export function CustomLessonDialog({ direction, initialRows, onClose, onSave }: 
             <div className="custom-row" key={index}>
               <label>
                 <span>{languageLabel(sourceLanguage)} word {index + 1}</span>
-                <input ref={index === 0 ? firstInputRef : undefined} value={row.source} onChange={(event) => changeRow(index, "source", event.target.value)} placeholder={sourceLanguage === "en" ? "e.g. red" : "mis. merah"} />
+                <input maxLength={80} ref={index === 0 ? firstInputRef : undefined} value={row.source} onChange={(event) => changeRow(index, "source", event.target.value)} placeholder={sourceLanguage === "en" ? "e.g. red" : "mis. merah"} />
               </label>
               <label>
                 <span>{languageLabel(targetLanguage)} word {index + 1}</span>
-                <input value={row.target} onChange={(event) => changeRow(index, "target", event.target.value)} placeholder={targetLanguage === "id" ? "mis. merah" : "e.g. red"} />
+                <input maxLength={80} value={row.target} onChange={(event) => changeRow(index, "target", event.target.value)} placeholder={targetLanguage === "id" ? "mis. merah" : "e.g. red"} />
               </label>
               <button type="button" className="remove-row" onClick={() => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index))} disabled={rows.length <= 2} aria-label={`Remove word pair ${index + 1}`}>
                 <Trash2 aria-hidden="true" size={18} />

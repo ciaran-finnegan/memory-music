@@ -17,6 +17,26 @@ describe("MemoryMusic learning studio", () => {
     expect(screen.getByText("Desember")).toBeVisible();
   });
 
+  it("shows the complete singable lyric instead of hiding it behind a word pair", () => {
+    render(<App />);
+
+    expect(screen.getByText(/Monday is Senin/i)).toBeVisible();
+    expect(screen.getAllByText(/clap-clap/i)).not.toHaveLength(0);
+  });
+
+  it("labels browser speech as optional pronunciation rather than singing", () => {
+    render(<App />);
+
+    expect(screen.getByRole("button", { name: /pronunciation cues/i })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("offers real vocals separately from the instant instrumental practice beat", () => {
+    render(<App />);
+
+    expect(screen.getByRole("button", { name: /make sung song with vocals/i })).toBeVisible();
+    expect(screen.getByRole("button", { name: /play practice beat/i })).toBeVisible();
+  });
+
   it("reverses the learning direction", async () => {
     const user = userEvent.setup();
     render(<App />);

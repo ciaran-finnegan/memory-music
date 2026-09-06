@@ -1,6 +1,7 @@
 import { Music2, RefreshCw, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MusicPlayer } from "./audio/MusicPlayer";
+import { requestSungSong } from "./audio/SungSongClient";
 import { CassettePlayer } from "./components/CassettePlayer";
 import { CustomLessonDialog } from "./components/CustomLessonDialog";
 import { Header } from "./components/Header";
@@ -8,6 +9,7 @@ import { LessonPicker } from "./components/LessonPicker";
 import { LyricsView } from "./components/LyricsView";
 import { PracticePanel } from "./components/PracticePanel";
 import { SongControls } from "./components/SongControls";
+import { SungSongPanel, type SungSongStatus } from "./components/SungSongPanel";
 import { getDirectedPairs, getLesson, languageNames, reverseDirection } from "./domain/catalog";
 import { buildCustomLesson, type CustomPairRow } from "./domain/customLesson";
 import { generateSong } from "./domain/lyrics";
@@ -26,7 +28,13 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeLine, setActiveLine] = useState(0);
   const [elapsed, setElapsed] = useState(0);
+  const [sungStatus, setSungStatus] = useState<SungSongStatus>("idle");
+  const [sungAudioUrl, setSungAudioUrl] = useState<string | null>(null);
+  const [sungError, setSungError] = useState<string | null>(null);
+  const [sungProgress, setSungProgress] = useState(0);
+  const [isSungPlaying, setIsSungPlaying] = useState(false);
   const playerRef = useRef<MusicPlayer | null>(null);
+  const sungAudioRef = useRef<HTMLAudioElement | null>(null);
   const [sourceLanguage, targetLanguage] = preferences.direction.split("-") as [Language, Language];
 
   const lesson: Lesson = useMemo(() => {
@@ -65,7 +73,17 @@ export default function App() {
 
   useEffect(() => () => {
     void playerRef.current?.dispose();
+    sungAudioRef.current?.pause();
   }, []);
+
+  useEffect(() => {
+    sungAudioRef.current?.pause();
+    setSungStatus("idle");
+    setSungAudioUrl(null);
+    setSungError(null);
+    setSungProgress(0);
+    setIsSungPlaying(false);
+  }, [song, preferences.style]);
 
   const updatePreferences = (change: Partial<Preferences>) => {
     stopPlayback();
@@ -137,6 +155,35 @@ export default function App() {
     }
   };
 
+  const generateSungSong = async () => {
+    stopPlayback();
+    sungAudioRef.current?.pause();
+    setSungStatus("generating");
+    setSungError(null);
+    try {
+      const audioUrl = await requestSungSong({
+        lessonId: lesson.id,
+        direction: preferences.direction,
+        style: preferences.style,
+        seed: preferences.seed,
+        customPairs: lesson.id === "custom" ? preferences.customPairs : [],
+      });
+      setSungAudioUrl(audioUrl);
+      setSungStatus("ready");
+    } catch (error) {
+      setSungStatus("error");
+      setSungError(error instanceof Error ? error.message : "The singer could not finish that take.");
+    }
+  };
+
+  const updateSungProgress = () => {
+    const audio = sungAudioRef.current;
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+    const nextProgress = audio.currentTime / audio.duration;
+    setSungProgress(nextProgress);
+    setActiveLine(Math.min(song.lines.length - 1, Math.floor(nextProgress * song.lines.length)));
+  };
+
   const seekLine = (index: number) => {
     const shouldContinue = isPlaying;
     stopPlayback(false);
@@ -145,7 +192,8 @@ export default function App() {
     if (shouldContinue) void startAt(index);
   };
 
-  const progress = musicPlan.durationSeconds ? elapsed / musicPlan.durationSeconds : 0;
+  const practiceProgress = musicPlan.durationSeconds ? elapsed / musicPlan.durationSeconds : 0;
+  const progress = isSungPlaying || sungProgress > 0 ? sungProgress : practiceProgress;
   const targetFlag = targetLanguage === "id" ? "ID" : "EN";
 
   return (
@@ -186,7 +234,29 @@ export default function App() {
 
           <div className="player-layout">
             <div>
-              <CassettePlayer song={song} progress={progress} isPlaying={isPlaying} />
+              <CassettePlayer song={song} progress={progress} isPlaying={isPlaying || isSungPlaying} />
+              <div className="now-singing" aria-live="polite">
+                <span>{isSungPlaying || isPlaying ? "NOW SINGING" : "LYRIC PREVIEW"}</span>
+                <strong>{song.lines[activeLine]?.primary}</strong>
+              </div>
+              <SungSongPanel
+                status={sungStatus}
+                audioUrl={sungAudioUrl}
+                error={sungError}
+                audioRef={sungAudioRef}
+                onGenerate={() => void generateSungSong()}
+                onPlay={() => {
+                  stopPlayback(false);
+                  setIsSungPlaying(true);
+                }}
+                onPause={() => setIsSungPlaying(false)}
+                onEnded={() => {
+                  setIsSungPlaying(false);
+                  setSungProgress(0);
+                  setActiveLine(0);
+                }}
+                onTimeUpdate={updateSungProgress}
+              />
               <SongControls
                 style={preferences.style}
                 tempo={preferences.tempo}

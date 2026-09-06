@@ -13,6 +13,10 @@ describe("preference persistence", () => {
     expect(loadPreferences(storageReturning("{"))).toEqual(DEFAULT_PREFERENCES);
   });
 
+  it("keeps pronunciation cues off by default so mobile music is not ducked", () => {
+    expect(DEFAULT_PREFERENCES.speechEnabled).toBe(false);
+  });
+
   it("uses defaults when persisted values do not match the schema", () => {
     expect(loadPreferences(storageReturning(JSON.stringify({ version: 1, bpm: 400 })))).toEqual(DEFAULT_PREFERENCES);
   });
@@ -30,5 +34,20 @@ describe("preference persistence", () => {
     savePreferences(storage, expected);
 
     expect(loadPreferences(storage)).toEqual(expected);
+  });
+
+  it("migrates version 1 preferences while disabling the old speech-first default", () => {
+    const legacy = {
+      ...DEFAULT_PREFERENCES,
+      version: 1,
+      lessonId: "months",
+      speechEnabled: true,
+    };
+
+    expect(loadPreferences(storageReturning(JSON.stringify(legacy)))).toMatchObject({
+      version: 2,
+      lessonId: "months",
+      speechEnabled: false,
+    });
   });
 });

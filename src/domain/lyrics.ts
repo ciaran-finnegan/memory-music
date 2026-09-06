@@ -33,14 +33,14 @@ export interface GenerateSongInput {
 
 const callTemplates: Record<Language, Array<(source: string, target: string) => string>> = {
   en: [
-    (source, target) => `${source}, sing ${target}!`,
-    (source, target) => `${source} means ${target}!`,
-    (source, target) => `Say ${source}, answer ${target}!`,
+    (source, target) => `${source} is ${target} — clap, clap, hey!`,
+    (source, target) => `${source}, ${target} — sing it our way!`,
+    (source, target) => `Say ${source}, sing ${target} today!`,
   ],
   id: [
-    (source, target) => `${source}, nyanyikan ${target}!`,
-    (source, target) => `${source} artinya ${target}!`,
-    (source, target) => `Ucapkan ${source}, jawab ${target}!`,
+    (source, target) => `${source} itu ${target} — tepuk, tepuk, hei!`,
+    (source, target) => `${source}, ${target} — nyanyikan bersama!`,
+    (source, target) => `Ucap ${source}, nyanyi ${target} sekarang!`,
   ],
 };
 
@@ -69,15 +69,8 @@ export function generateSong({ lesson, direction, seed }: GenerateSongInput): So
     {
       id: "intro-ready",
       kind: "intro",
-      primary: sourceLanguage === "en" ? `Ready? Let's loop the ${lessonName.toLowerCase()}.` : `Siap? Ayo ulangi ${lessonName.toLowerCase()}.`,
-      secondary: sourceLanguage === "en" ? `Listen for ${targetName}` : `Dengarkan ${targetName}`,
-      speechLanguage: sourceLanguage,
-      beats: 4,
-    },
-    {
-      id: "intro-count",
-      kind: "intro",
-      primary: sourceLanguage === "en" ? "Hear it, say it, make it stick." : "Dengar, ucapkan, pasti ingat.",
+      primary: sourceLanguage === "en" ? "Clap-clap, learn it our way!" : "Tepuk-tepuk, nyanyi bersama!",
+      secondary: sourceLanguage === "en" ? `${lessonName} in ${targetName}` : `${lessonName} dalam ${targetName}`,
       speechLanguage: sourceLanguage,
       beats: 4,
     },
@@ -99,7 +92,7 @@ export function generateSong({ lesson, direction, seed }: GenerateSongInput): So
     id: `recap-${index}`,
     kind: "recap",
     primary: targets.join(" · "),
-    secondary: sourceLanguage === "en" ? "Now keep the beat" : "Ikuti iramanya",
+    secondary: sourceLanguage === "en" ? "Chorus — sing it again!" : "Korus — nyanyikan lagi!",
     speech: targets.join(", "),
     speechLanguage: targetLanguage,
     beats: 8,

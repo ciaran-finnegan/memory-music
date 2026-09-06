@@ -11,7 +11,8 @@ describe("music timing plan", () => {
 
     expect(plan.lines[0].startSeconds).toBe(0);
     expect(plan.lines[1].startSeconds).toBeGreaterThan(plan.lines[0].endSeconds);
-    expect(plan.lines[2].durationSeconds).toBeCloseTo(4.8);
+    expect(plan.lines[1].durationSeconds).toBeCloseTo(4.8);
+    expect(plan.lines[1].startSeconds).toBeLessThan(2.6);
   });
 
   it("keeps the final duration equal to the last line end", () => {
@@ -30,6 +31,15 @@ describe("music timing plan", () => {
     expect(study.events.filter((event) => event.kind === "hihat").length).toBeLessThan(
       pop.events.filter((event) => event.kind === "hihat").length,
     );
+  });
+
+  it("starts with a recognizable melody instead of only bass and percussion", () => {
+    const plan = createMusicPlan(song, "pop", 100);
+    const melody = plan.events.filter((event) => event.kind === "melody");
+
+    expect(melody.length).toBeGreaterThan(song.lines.length * 2);
+    expect(melody[0].startSeconds).toBeLessThan(0.1);
+    expect(new Set(melody.slice(0, 12).map((event) => event.frequency)).size).toBeGreaterThan(3);
   });
 
   it("rejects unsupported tempo values", () => {

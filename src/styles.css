@@ -97,12 +97,29 @@ a { color: inherit; }
 .cassette-screws i:nth-child(3) { bottom: 9px; left: 10px; }
 .cassette-screws i:nth-child(4) { bottom: 9px; right: 10px; }
 
+.now-singing { position: relative; z-index: 1; width: calc(100% - 30px); min-height: 76px; margin: -8px auto 0; padding: 13px 16px 14px; background: var(--ink); color: var(--white); border: 2px solid var(--ink); border-radius: 8px 8px 16px 16px; box-shadow: 4px 4px 0 rgba(20, 33, 61, 0.2); }
+.now-singing span { display: block; margin-bottom: 4px; color: var(--mango); font-size: 0.58rem; font-weight: 950; letter-spacing: 0.12em; }
+.now-singing strong { display: block; font-family: "Fredoka Variable", sans-serif; font-size: clamp(0.92rem, 1.6vw, 1.08rem); font-weight: 550; line-height: 1.22; }
+
+.sung-song-card { margin-top: 22px; padding: 17px; background: #fff8e7; border: 2px solid var(--ink); border-radius: 16px 16px 5px 16px; box-shadow: 4px 4px 0 var(--ink); }
+.vocal-badge { width: max-content; display: flex; align-items: center; gap: 5px; margin-bottom: 8px; padding: 3px 7px; background: var(--mango); border: 1px solid var(--ink); border-radius: 999px; font-size: 0.59rem; font-weight: 950; letter-spacing: 0.08em; }
+.sung-song-card h3 { margin: 0; font-family: "Fredoka Variable", sans-serif; font-size: 1.28rem; font-weight: 650; }
+.sung-song-card > p { margin: 4px 0 13px; color: var(--muted); font-size: 0.74rem; line-height: 1.35; }
+.sing-button { width: 100%; min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 9px; padding: 8px 14px; border: 2px solid var(--ink); border-radius: 999px; background: var(--coral); box-shadow: 3px 3px 0 var(--ink); font-weight: 950; }
+.sing-button:hover { background: var(--mango); }
+.sung-audio { display: block; width: 100%; height: 48px; margin-top: 13px; }
+.sung-song-card .generation-note { margin: 11px 0 0; color: var(--ink); font-weight: 750; }
+.sung-song-card .generation-error { margin: 11px 0 0; padding: 9px 10px; color: #7a2524; background: #ffe3df; border-radius: 8px; font-weight: 800; }
+
 .song-controls { margin-top: 24px; }
 .control-fields { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; }
 .control-fields label > span { display: block; margin: 0 0 6px 3px; font-size: 0.66rem; font-weight: 850; }
 .control-fields select { width: 100%; min-height: 44px; padding: 0 30px 0 11px; border: 1.5px solid var(--ink); border-radius: 10px; background: var(--white); font-weight: 800; font-size: 0.75rem; }
 .speech-toggle { align-self: end; min-width: 48px; min-height: 44px; padding: 0 12px; display: inline-flex; gap: 7px; align-items: center; justify-content: center; border: 1.5px solid var(--ink); border-radius: 10px; background: var(--white); font-size: 0.74rem; font-weight: 850; }
 .speech-toggle[aria-pressed="true"] { background: var(--mango); }
+.practice-beat-label { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 18px 0 -7px; color: var(--ink); font-size: 0.72rem; font-weight: 900; }
+.practice-beat-label::before, .practice-beat-label::after { content: ""; flex: 1; height: 1px; background: rgba(20, 33, 61, 0.28); }
+.practice-beat-label span { color: var(--muted); font-weight: 700; }
 .transport-dock { display: grid; grid-template-columns: 48px minmax(120px, 1fr) 48px; gap: 10px; max-width: 320px; margin: 18px auto 0; }
 .round-control, .play-control { min-height: 48px; border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); }
 .round-control { display: grid; place-items: center; background: var(--white); border-radius: 50%; }
@@ -123,8 +140,7 @@ a { color: inherit; }
 .line-number { color: var(--muted); font-family: "Fredoka Variable", sans-serif; font-size: 0.7rem; }
 .line-copy { min-width: 0; }
 .line-copy > strong, .pair-lyric { display: block; font-family: "Fredoka Variable", sans-serif; font-size: clamp(0.95rem, 1.3vw, 1.12rem); line-height: 1.25; font-weight: 550; }
-.pair-lyric { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.pair-lyric strong { color: #a03735; font-size: 1.12em; }
+.pair-lyric { color: #8f2d2c; }
 .lyric-beat { color: var(--coral); }
 .line-copy small { display: block; margin-top: 3px; color: var(--muted); font-size: 0.66rem; }
 .line-pulse { display: flex; align-items: flex-end; justify-content: center; gap: 2px; height: 18px; opacity: 0; }
@@ -229,6 +245,7 @@ footer { padding: 24px 0 34px; border-top: 1px solid var(--line); color: var(--m
   .target-language { max-width: 74px; overflow: hidden; text-overflow: ellipsis; }
   .studio-heading > div > p:last-child { display: none; }
   .cassette { min-height: 205px; }
+  .now-singing { width: calc(100% - 18px); }
   .tape-window { padding-inline: 10px; }
   .reel { width: 50px; }
   .cassette-footer > span:last-child { display: none; }

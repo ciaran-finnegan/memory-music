@@ -11,6 +11,7 @@ type AudioContextConstructor = typeof AudioContext;
 
 export class MusicPlayer {
   private context: AudioContext | null = null;
+  private output: AudioNode | null = null;
   private nodes = new Set<AudioScheduledSourceNode>();
   private speechTimers: number[] = [];
   private animationFrame = 0;
@@ -43,12 +44,22 @@ export class MusicPlayer {
     if (!this.context || this.context.state === "closed") {
       const Context = window.AudioContext || (window as unknown as { webkitAudioContext: AudioContextConstructor }).webkitAudioContext;
       this.context = new Context();
+      const compressor = this.context.createDynamicsCompressor();
+      const master = this.context.createGain();
+      compressor.threshold.value = -18;
+      compressor.knee.value = 12;
+      compressor.ratio.value = 4;
+      compressor.attack.value = 0.003;
+      compressor.release.value = 0.22;
+      master.gain.value = 0.72;
+      compressor.connect(master).connect(this.context.destination);
+      this.output = compressor;
     }
     if (this.context.state === "suspended") {
       await this.context.resume();
     }
 
-    const leadIn = 0.06;
+    const leadIn = 0.025;
     this.timelineOrigin = this.context.currentTime + leadIn - this.currentPosition;
     for (const event of plan.events) {
       if (event.startSeconds + event.durationSeconds >= this.currentPosition) {
@@ -80,6 +91,7 @@ export class MusicPlayer {
       await this.context.close();
     }
     this.context = null;
+    this.output = null;
   }
 
   private tick = () => {
@@ -123,7 +135,10 @@ export class MusicPlayer {
     gain.gain.setValueAtTime(0.0001, time);
     gain.gain.exponentialRampToValueAtTime(event.gain, time + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.0001, time + event.durationSeconds);
-    oscillator.connect(gain).connect(this.context.destination);
+    const filter = this.context.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = event.kind === "melody" ? 4200 : event.kind === "bass" ? 850 : 2200;
+    oscillator.connect(filter).connect(gain).connect(this.output ?? this.context.destination);
     oscillator.start(time);
     oscillator.stop(time + event.durationSeconds + 0.02);
     this.track(oscillator);
@@ -137,7 +152,7 @@ export class MusicPlayer {
     oscillator.frequency.exponentialRampToValueAtTime(48, time + event.durationSeconds);
     gain.gain.setValueAtTime(event.gain, time);
     gain.gain.exponentialRampToValueAtTime(0.0001, time + event.durationSeconds);
-    oscillator.connect(gain).connect(this.context.destination);
+    oscillator.connect(gain).connect(this.output ?? this.context.destination);
     oscillator.start(time);
     oscillator.stop(time + event.durationSeconds);
     this.track(oscillator);
@@ -158,7 +173,7 @@ export class MusicPlayer {
     filter.frequency.value = event.kind === "hihat" ? 7000 : 1200;
     gain.gain.setValueAtTime(event.gain, time);
     gain.gain.exponentialRampToValueAtTime(0.0001, time + event.durationSeconds);
-    source.connect(filter).connect(gain).connect(this.context.destination);
+    source.connect(filter).connect(gain).connect(this.output ?? this.context.destination);
     source.start(time);
     this.track(source);
   }
@@ -173,6 +188,7 @@ export class MusicPlayer {
         const utterance = new SpeechSynthesisUtterance(line.speech);
         utterance.lang = line.speechLanguage === "id" ? "id-ID" : "en-US";
         utterance.rate = plan.bpm === 120 ? 1.05 : plan.bpm === 80 ? 0.82 : 0.94;
+        utterance.volume = 0.72;
         window.speechSynthesis.speak(utterance);
       }, delay));
     }

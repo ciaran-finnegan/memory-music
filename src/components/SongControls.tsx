@@ -17,9 +17,9 @@ interface SongControlsProps {
 }
 
 const styles: Array<{ value: MusicStyle; label: string }> = [
-  { value: "pop", label: "Pop bounce" },
-  { value: "island", label: "Island groove" },
-  { value: "study", label: "Study beat" },
+  { value: "pop", label: "Bubblegum pop" },
+  { value: "island", label: "Sunny island" },
+  { value: "study", label: "Dreamy study" },
 ];
 
 export function SongControls(props: SongControlsProps) {
@@ -46,12 +46,15 @@ export function SongControls(props: SongControlsProps) {
           onClick={props.onSpeech}
           disabled={!props.speechSupported}
           aria-pressed={props.speechEnabled}
-          title={props.speechSupported ? "Toggle spoken word cues" : "Spoken cues are not supported in this browser"}
+          aria-label="Pronunciation cues"
+          title={props.speechSupported ? "Optional spoken pronunciation cues" : "Pronunciation cues are not supported in this browser"}
         >
           {props.speechEnabled ? <Volume2 aria-hidden="true" size={19} /> : <VolumeX aria-hidden="true" size={19} />}
-          <span>Word cues</span>
+          <span>Pronunciation cues</span>
         </button>
       </div>
+
+      <p className="practice-beat-label">Instant practice beat <span>instrumental</span></p>
 
       <div className="transport-dock" aria-label="Song playback controls">
         <button className="round-control" type="button" onClick={props.onRestart} aria-label="Restart song">
@@ -62,10 +65,10 @@ export function SongControls(props: SongControlsProps) {
           type="button"
           onClick={props.onPlayPause}
           disabled={!props.audioSupported}
-          aria-label={props.isPlaying ? "Pause song" : "Play song"}
+          aria-label={props.isPlaying ? "Pause practice beat" : "Play practice beat"}
         >
           {props.isPlaying ? <Pause aria-hidden="true" fill="currentColor" /> : <Play aria-hidden="true" fill="currentColor" />}
-          <span>{props.isPlaying ? "Pause" : "Play song"}</span>
+          <span>{props.isPlaying ? "Pause beat" : "Play beat"}</span>
         </button>
         <button className="round-control" type="button" onClick={props.onRegenerate} aria-label="New lyric variation">
           <Shuffle aria-hidden="true" size={20} />

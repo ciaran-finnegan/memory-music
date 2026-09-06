@@ -2,7 +2,7 @@ import type { Song } from "./lyrics";
 
 export type MusicStyle = "pop" | "island" | "study";
 export type Tempo = 80 | 100 | 120;
-export type MusicEventKind = "chord" | "bass" | "kick" | "snare" | "hihat";
+export type MusicEventKind = "melody" | "chord" | "bass" | "kick" | "snare" | "hihat";
 
 export interface TimedLyricLine {
   lineId: string;
@@ -18,7 +18,7 @@ export interface MusicEvent {
   durationSeconds: number;
   frequency?: number;
   gain: number;
-  waveform?: OscillatorType;
+  waveform?: "sine" | "square" | "triangle" | "sawtooth";
 }
 
 export interface MusicPlan {
@@ -34,10 +34,17 @@ export interface MusicPlan {
 const allowedTempos: Tempo[] = [80, 100, 120];
 const chordRoots = [261.63, 220, 174.61, 196];
 const gapSeconds = 0.06;
+const majorTriad = [1, 5 / 4, 3 / 2];
+
+const melodyPatterns: Record<MusicStyle, number[]> = {
+  pop: [0, 4, 7, 9, 7, 4, 2, 4],
+  island: [0, 2, 4, 7, 9, 7, 4, 2],
+  study: [0, 4, 7, 11, 9, 7, 4, 2],
+};
 
 function addTonalEvents(events: MusicEvent[], style: MusicStyle, beatSeconds: number, duration: number) {
   const totalBeats = Math.floor(duration / beatSeconds);
-  const chordWave: OscillatorType = style === "island" ? "sine" : style === "study" ? "triangle" : "square";
+  const chordWave: MusicEvent["waveform"] = style === "island" ? "sine" : style === "study" ? "triangle" : "square";
   const chordGain = style === "study" ? 0.045 : 0.06;
 
   for (let beat = 0; beat < totalBeats; beat += 1) {
@@ -46,14 +53,16 @@ function addTonalEvents(events: MusicEvent[], style: MusicStyle, beatSeconds: nu
     const root = chordRoots[Math.floor(beat / 4) % chordRoots.length];
 
     if (barBeat === 0 || (style === "island" && barBeat === 2)) {
-      events.push({
-        kind: "chord",
-        startSeconds: time + (style === "island" ? beatSeconds * 0.45 : 0),
-        durationSeconds: style === "island" ? beatSeconds * 0.45 : beatSeconds * 3.6,
-        frequency: root,
-        gain: chordGain,
-        waveform: chordWave,
-      });
+      for (const ratio of majorTriad) {
+        events.push({
+          kind: "chord",
+          startSeconds: time + (style === "island" ? beatSeconds * 0.45 : 0),
+          durationSeconds: style === "island" ? beatSeconds * 0.42 : beatSeconds * 3.6,
+          frequency: root * ratio,
+          gain: chordGain / majorTriad.length,
+          waveform: chordWave,
+        });
+      }
     }
 
     if (barBeat % 2 === 0) {
@@ -66,6 +75,26 @@ function addTonalEvents(events: MusicEvent[], style: MusicStyle, beatSeconds: nu
         waveform: "sine",
       });
     }
+  }
+}
+
+function addMelodyEvents(events: MusicEvent[], style: MusicStyle, beatSeconds: number, duration: number) {
+  const pattern = melodyPatterns[style];
+  const stepSeconds = style === "study" ? beatSeconds : beatSeconds / 2;
+  const totalSteps = Math.floor(duration / stepSeconds);
+
+  for (let step = 0; step < totalSteps; step += 1) {
+    if (style === "island" && step % 4 === 0) continue;
+    const semitones = pattern[step % pattern.length];
+    const phraseLift = Math.floor(step / pattern.length) % 4 === 3 ? 12 : 0;
+    events.push({
+      kind: "melody",
+      startSeconds: step * stepSeconds,
+      durationSeconds: stepSeconds * (style === "study" ? 0.82 : 0.68),
+      frequency: 523.25 * 2 ** ((semitones + phraseLift) / 12),
+      gain: style === "study" ? 0.032 : 0.052,
+      waveform: style === "pop" ? "triangle" : "sine",
+    });
   }
 }
 
@@ -119,6 +148,7 @@ export function createMusicPlan(song: Song, style: MusicStyle, bpm: Tempo): Musi
   const events: MusicEvent[] = [];
   addTonalEvents(events, style, beatSeconds, durationSeconds);
   addRhythmEvents(events, style, beatSeconds, durationSeconds);
+  addMelodyEvents(events, style, beatSeconds, durationSeconds);
 
   return {
     bpm,

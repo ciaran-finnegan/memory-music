@@ -2,5 +2,21 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "memory-music",
   "pages_build_output_dir": "./dist",
-  "compatibility_date": "2026-09-06"
+  "compatibility_date": "2026-09-06",
+  "ai": {
+    "binding": "AI",
+    "remote": true
+  },
+  "r2_buckets": [
+    {
+      "binding": "SONGS",
+      "bucket_name": "memory-music-songs"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "SONG_RATE_LIMIT",
+      "id": "aecf609954d946ce9c2005321974b25c"
+    }
+  ]
 }

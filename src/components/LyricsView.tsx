@@ -30,16 +30,14 @@ export function LyricsView({ lines, activeLine, onSelect }: LyricsViewProps) {
             >
               <span className="line-number">{String(index + 1).padStart(2, "0")}</span>
               <span className="line-copy">
-                {line.kind === "pair" ? (
-                  <span className="pair-lyric">
-                    <span>{line.source}</span>
-                    <span className="lyric-beat" aria-hidden="true">♪</span>
-                    <strong>{line.target}</strong>
-                  </span>
-                ) : (
-                  <strong>{line.primary}</strong>
+                <strong className={line.kind === "pair" ? "pair-lyric" : undefined}>{line.primary}</strong>
+                {line.secondary && (
+                  <small>
+                    {line.kind === "pair" ? (
+                      <><span>{line.source}</span><span aria-hidden="true"> ↔ </span><span>{line.target}</span></>
+                    ) : line.secondary}
+                  </small>
                 )}
-                {line.secondary && <small>{line.secondary}</small>}
               </span>
               <span className="line-pulse" aria-hidden="true"><i /><i /><i /></span>
             </button>

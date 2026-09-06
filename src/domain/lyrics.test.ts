@@ -39,4 +39,22 @@ describe("mnemonic lyric generator", () => {
     expect(recapText).toContain("satu · dua · tiga · empat");
     expect(recapText).toContain("tujuh belas · delapan belas · sembilan belas · dua puluh");
   });
+
+  it("uses a short hook before the first teaching line", () => {
+    const song = generateSong({ lesson: getLesson("days"), direction: "en-id", seed: 0 });
+
+    expect(song.lines.filter((line) => line.kind === "intro")).toHaveLength(1);
+    expect(song.lines[0].primary).toMatch(/clap-clap/i);
+    expect(song.lines[1].kind).toBe("pair");
+  });
+
+  it("creates a repeated chorus with the complete target sequence", () => {
+    const lesson = getLesson("days");
+    const song = generateSong({ lesson, direction: "en-id", seed: 0 });
+    const chorus = song.lines.filter((line) => line.kind === "recap").map((line) => line.primary).join(" ");
+
+    for (const pair of getDirectedPairs(lesson, "en-id")) {
+      expect(chorus).toContain(pair.target);
+    }
+  });
 });
