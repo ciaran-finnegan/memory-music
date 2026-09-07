@@ -13,7 +13,7 @@ export function LyricsView({ lines, activeLine, onSelect }: LyricsViewProps) {
       <div className="section-heading">
         <div>
           <h2 id="vocabulary-title">Vocabulary & meanings</h2>
-          <p>Your learning notes. Write lyrics to turn them into a song.</p>
+          <p>Reference notes, not extra lyrics.</p>
         </div>
         <Mic2 aria-hidden="true" size={21} />
       </div>

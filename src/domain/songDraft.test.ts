@@ -9,6 +9,11 @@ describe("lyric draft guardrails", () => {
   it("accepts complete lyrics and preserves their exact wording", () => {
     expect(parseSongDraft({ title: " Last Light ", lyrics }, pairs)).toMatchObject({ title: "Last Light", lyrics });
   });
+  it("accepts a compact memory aid and rejects an unnecessarily long song", () => {
+    const short = "[Chorus]\nMonday — Senin.\nTuesday — Selasa.\nSenin, Selasa: Monday, Tuesday.";
+    expect(parseSongDraft({ title: "Two days", lyrics: short }, getDirectedPairs(getLesson("days"), "en-id").slice(0, 2)).lyrics).toBe(short);
+    expect(() => parseSongDraft({ title: "Last Light", lyrics: `${lyrics}\n${"extra story words ".repeat(50)}` }, pairs)).toThrow();
+  });
   it("accepts a valid third-person English meaning in reverse Latin lessons", () => {
     expect(() => parseSongDraft({ title: "Last Light", lyrics }, getDirectedPairs(getLesson("latin-future"), "la-en"))).not.toThrow();
   });

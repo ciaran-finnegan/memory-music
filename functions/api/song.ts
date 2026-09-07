@@ -27,12 +27,12 @@ export const onRequestPost: PagesFunction<SongEnv> = async ({ request, env }) =>
 
     const input = parseSongRequest(await request.json());
     const cacheKey = await sha256(JSON.stringify(input));
-    const objectKey = `v3/${cacheKey}.mp3`;
+    const objectKey = `v5/${cacheKey}.mp3`;
     if (await env.SONGS.head(objectKey)) {
-      return json({ audioUrl: `/api/song-audio/${cacheKey}?rev=3`, cached: true });
+      return json({ audioUrl: `/api/song-audio/${cacheKey}?rev=5`, cached: true });
     }
 
-    const draftObject = await env.SONGS.get(`v3/${cacheKey}.json`);
+    const draftObject = await env.SONGS.get(`v5/${cacheKey}.json`);
     if (!draftObject) return json({ error: "Write and review the lyrics first, then produce the song." }, 409);
     const draft = await draftObject.json<SongDraft>();
 
@@ -64,7 +64,7 @@ export const onRequestPost: PagesFunction<SongEnv> = async ({ request, env }) =>
       },
       customMetadata: { lessonId: input.lessonId, direction: input.direction, style: input.style },
     });
-    return json({ audioUrl: `/api/song-audio/${cacheKey}?rev=3`, cached: false }, 201);
+    return json({ audioUrl: `/api/song-audio/${cacheKey}?rev=5`, cached: false }, 201);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     if (message === "Invalid song request.") return json({ error: message }, 400);

@@ -7,7 +7,7 @@ export const onRequestPost: PagesFunction<Env & { AI_API_TOKEN: string }> = asyn
     if (raw.length > 8000) return Response.json({ error: "That lesson is too large." }, { status: 413 });
     const input = parseSongRequest(JSON.parse(raw));
     const key = await songKey(input);
-    const stored = await env.SONGS.get(`v3/${key}.json`);
+    const stored = await env.SONGS.get(`v5/${key}.json`);
     if (stored) return Response.json(await stored.json(), { headers: { "Cache-Control": "no-store" } });
     const ip = request.headers.get("CF-Connecting-IP") ?? "local";
     const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip));
@@ -17,12 +17,12 @@ export const onRequestPost: PagesFunction<Env & { AI_API_TOKEN: string }> = asyn
     if (count >= 4) return Response.json({ error: "Today's four lyric drafts are used. Your saved songs are still available." }, { status: 429 });
     await env.SONG_RATE_LIMIT.put(quotaKey, String(count + 1), { expirationTtl: 86400 });
     const draft = await writeSong(input, env);
-    const created = await env.SONGS.put(`v3/${key}.json`, JSON.stringify(draft), {
+    const created = await env.SONGS.put(`v5/${key}.json`, JSON.stringify(draft), {
       onlyIf: new Headers({ "If-None-Match": "*" }),
       httpMetadata: { contentType: "application/json" },
     });
     if (!created) {
-      const canonical = await env.SONGS.get(`v3/${key}.json`);
+      const canonical = await env.SONGS.get(`v5/${key}.json`);
       if (!canonical) throw new Error("The saved draft is unavailable.");
       return Response.json(await canonical.json(), { headers: { "Cache-Control": "no-store" } });
     }

@@ -21,8 +21,8 @@ export function SungSongPanel(props: SungSongPanelProps) {
   return (
     <section className="sung-song-card" aria-labelledby="sung-song-title">
       <div className="vocal-badge"><Sparkles aria-hidden="true" size={15} /> YOUR SONG</div>
-      <h3 id="sung-song-title">{props.hasDraft ? "Bring these lyrics to life" : "Start with a better song"}</h3>
-      <p>{props.hasDraft ? "Read the lyrics, then produce the vocals and full arrangement when you are happy with them." : "Original verses, a memorable chorus, and your lesson woven into the story. Written for teens and adults."}</p>
+      <h3 id="sung-song-title">{props.hasDraft ? "Make your memory aid musical" : "A short memory aid"}</h3>
+      <p>{props.hasDraft ? "Check the words and meanings, then make the recording when you are happy with them." : "A few simple lines to help you remember the words and meanings. No long stories or extra verses."}</p>
 
       {props.status === "ready" && props.audioUrl ? (
         <audio

@@ -5,6 +5,7 @@ import { requestLyrics, requestSungSong } from "./audio/SungSongClient";
 import type { SongDraft } from "./domain/songDraft";
 import { CassettePlayer } from "./components/CassettePlayer";
 import { CustomLessonDialog } from "./components/CustomLessonDialog";
+import { ExactSongStudio } from "./components/ExactSongStudio";
 import { Header } from "./components/Header";
 import { LessonPicker } from "./components/LessonPicker";
 import { LyricsView } from "./components/LyricsView";
@@ -24,6 +25,7 @@ function restoredPreferences(): Preferences {
 
 export default function App() {
   const [preferences, setPreferences] = useState<Preferences>(restoredPreferences);
+  const [mode, setMode] = useState<"exact" | "ai">("exact");
   const [customOpen, setCustomOpen] = useState(false);
   const [practiceOpen, setPracticeOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -139,14 +141,14 @@ export default function App() {
     ? {
         kicker: "Songs worth remembering",
         headline: "Your next earworm is a lesson.",
-        intro: "Choose a lesson. Write the lyrics. Make it a song you want to replay.",
+        intro: "Put your words to music. Nothing added. Choose a lesson or type your own words.",
         pick: "Pick your lesson",
         nowLearning: "Now learning",
       }
     : {
         kicker: "Lagu singkat, ingatan kuat",
         headline: "Pelajaran yang terus terngiang.",
-        intro: "Pilih topik, tekan putar, dan biarkan irama membantu ingatanmu.",
+        intro: "Jadikan kata-katamu sebuah melodi. Tanpa tambahan kata. Pilih pelajaran atau tulis sendiri.",
         pick: "Pilih pelajaran",
         nowLearning: "Sedang belajar",
       };
@@ -257,12 +259,19 @@ export default function App() {
               <h2 id="song-title">{song.title}</h2>
               <p>{song.subtitle} · {lesson.pairs.length} word{lesson.pairs.length === 1 ? "" : "s"}</p>
             </div>
-            <button className="variation-button" type="button" onClick={() => updatePreferences({ seed: preferences.seed + 1 })}>
-              <RefreshCw aria-hidden="true" size={17} /> New version
-            </button>
+            {mode === "ai" && draft && <button className="variation-button" type="button" onClick={() => updatePreferences({ seed: preferences.seed + 1 })}>
+              <RefreshCw aria-hidden="true" size={17} /> Clear draft
+            </button>}
           </div>
 
-          <div className="player-layout">
+          <div className="song-mode" role="group" aria-label="How to make your song">
+            <button type="button" aria-pressed={mode === "exact"} onClick={() => { stopPlayback(); sungAudioRef.current?.pause(); setMode("exact"); }}>Your exact words</button>
+            <button type="button" aria-pressed={mode === "ai"} onClick={() => { stopPlayback(); setMode("ai"); }}>AI memory aid</button>
+          </div>
+          {mode === "exact" ? <div className="exact-layout">
+            <ExactSongStudio key={`${lesson.id}/${preferences.direction}`} storageKey={`memory-music/exact/${lesson.id}/${preferences.direction}`} initialLyrics={directedPairs.map((pair) => pair.target).join("\n")} language={targetLanguage} />
+            {practiceOpen ? <PracticePanel pairs={directedPairs} seed={preferences.seed} onClose={() => setPracticeOpen(false)} /> : <LyricsView lines={song.lines} activeLine={activeLine} onSelect={seekLine} />}
+          </div> : <div className="player-layout">
             <div>
               <CassettePlayer song={song} progress={progress} isPlaying={isPlaying || isSungPlaying} />
               <div className="now-singing" aria-live="polite">
@@ -324,10 +333,10 @@ export default function App() {
                 <details className="vocabulary-details"><summary>Vocabulary & meanings</summary><LyricsView lines={song.lines} activeLine={activeLine} onSelect={seekLine} /></details>
               </section>
             ) : <LyricsView lines={song.lines} activeLine={activeLine} onSelect={seekLine} />}
-          </div>
+          </div>}
 
           <div className="studio-actions">
-            <p><Sparkles aria-hidden="true" size={18} /> Review your lyrics first. Produce the recording when you are ready.</p>
+            <p><Sparkles aria-hidden="true" size={18} /> {mode === "exact" ? "Only the words in your box are sent to the singer." : "A short memory aid. Review the lyrics before making music."}</p>
             <button className="practice-button" type="button" onClick={() => setPracticeOpen((current) => !current)}>
               {practiceOpen ? "Show lyrics" : "Practice"}
             </button>

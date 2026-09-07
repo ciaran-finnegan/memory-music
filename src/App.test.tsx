@@ -1,15 +1,30 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
+
+function renderAiApp() {
+  const result = render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: "AI memory aid" }));
+  return result;
+}
 
 describe("MemoryMusic learning studio", () => {
   beforeEach(() => window.localStorage.clear());
   afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
+  it("defaults to editable exact words with classical music and no hidden reset button", () => {
+    render(<App />);
+    expect(screen.getByRole("button", { name: "Your exact words" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("textbox", { name: "Your words" })).toHaveValue("Senin\nSelasa\nRabu\nKamis\nJumat\nSabtu\nMinggu");
+    expect(screen.getByRole("combobox", { name: "Music style" })).toHaveValue("classical");
+    expect(screen.queryByRole("button", { name: "New version" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Write lyrics" })).not.toBeInTheDocument();
+  });
+
   it("switches to Latin, shows all future forms, supports recall and custom words, and switches back", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    renderAiApp();
     await user.selectOptions(screen.getByRole("combobox", { name: "Language course" }), "la");
     expect(screen.getByRole("heading", { name: "To be: future in Latin" })).toBeVisible();
     for (const form of ["ero", "eris", "erit", "erimus", "eritis", "erunt"]) expect(screen.getByText(form, { exact: true })).toBeVisible();
@@ -28,7 +43,7 @@ describe("MemoryMusic learning studio", () => {
 
   it("changes lesson and shows its generated target vocabulary", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    renderAiApp();
 
     await user.click(screen.getByRole("button", { name: /months/i }));
 
@@ -38,7 +53,7 @@ describe("MemoryMusic learning studio", () => {
   });
 
   it("shows learning notes before requesting lyrics and discloses the audio price", () => {
-    render(<App />);
+    renderAiApp();
     expect(screen.getByText("Senin")).toBeVisible();
     expect(screen.getByText(/\$0\.15/)).toBeVisible();
     expect(screen.queryByText(/clap-clap/i)).not.toBeInTheDocument();
@@ -47,7 +62,7 @@ describe("MemoryMusic learning studio", () => {
   });
 
   it("labels browser speech as optional pronunciation rather than singing", async () => {
-    render(<App />);
+    renderAiApp();
     await userEvent.click(screen.getByText("Optional pronunciation & rhythm practice"));
     expect(screen.getByRole("button", { name: /pronunciation cues/i })).toHaveAttribute("aria-pressed", "false");
   });
@@ -59,7 +74,7 @@ describe("MemoryMusic learning studio", () => {
       return Response.json(url === "/api/lyrics" ? { title: "Last Train Home", lyrics: "[Verse 1]\nThe platform lights run down the line.\n[Chorus]\nSenin, a Monday I can call mine.", model: "openai/gpt-5.5" } : { audioUrl: "/api/song-audio/example?rev=3", cached: false });
     });
     vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
-    render(<App />);
+    renderAiApp();
     await userEvent.click(screen.getByRole("button", { name: /write lyrics/i }));
     expect(await screen.findByRole("heading", { name: "Last Train Home" })).toBeVisible();
     expect(screen.getByText("The platform lights run down the line.")).toBeVisible();
@@ -74,7 +89,7 @@ describe("MemoryMusic learning studio", () => {
 
   it("reverses the learning direction", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    renderAiApp();
 
     await user.click(screen.getByRole("button", { name: /swap languages/i }));
 
@@ -85,7 +100,7 @@ describe("MemoryMusic learning studio", () => {
   it("does not discard a paid draft when a practice-only preference changes", async () => {
     let finish!: (response: Response) => void;
     vi.stubGlobal("fetch", () => new Promise<Response>((resolve) => { finish = resolve; }));
-    render(<App />);
+    renderAiApp();
     await userEvent.click(screen.getByRole("button", { name: /write lyrics/i }));
     await userEvent.click(screen.getByText("Optional pronunciation & rhythm practice"));
     await userEvent.selectOptions(screen.getByRole("combobox", { name: /practice tempo/i }), "80");
@@ -95,7 +110,7 @@ describe("MemoryMusic learning studio", () => {
 
   it("creates a song from custom bilingual pairs", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    renderAiApp();
 
     await user.click(screen.getByRole("button", { name: /custom lesson/i }));
     const dialog = screen.getByRole("dialog", { name: /build a custom lesson/i });
@@ -120,7 +135,7 @@ describe("MemoryMusic learning studio", () => {
 
   it("opens a recall round for the active lesson", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    renderAiApp();
 
     await user.click(screen.getByRole("button", { name: /^practice$/i }));
 
@@ -130,7 +145,7 @@ describe("MemoryMusic learning studio", () => {
 
   it("moves focus into the custom dialog and returns it when closed", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    renderAiApp();
     const trigger = screen.getByRole("button", { name: /custom lesson/i });
 
     await user.click(trigger);

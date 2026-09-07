@@ -10,11 +10,12 @@ export function parseSongDraft(value: unknown, pairs: DirectedPair[]): SongDraft
   if (!value || typeof value !== "object") throw new Error("The lyric draft was incomplete. Please try another version.");
   const draft = value as Record<string, unknown>;
   if (typeof draft.title !== "string" || !draft.title.trim() || draft.title.length > 100 ||
-      typeof draft.lyrics !== "string" || draft.lyrics.length < 150 || draft.lyrics.length > 3500 ||
+      typeof draft.lyrics !== "string" || draft.lyrics.length < 40 || draft.lyrics.length > 1500 ||
       !/\[chorus\]/i.test(draft.lyrics)) {
     throw new Error("The lyric draft was incomplete. Please try another version.");
   }
   const text = draft.lyrics.toLocaleLowerCase();
+  if (text.split(/\s+/).length > Math.max(90, pairs.length * 7)) throw new Error("The draft was too long for a memory aid. Please try another version.");
   // Every term in the language being learned must survive songwriting unchanged.
   const missing = pairs.filter((pair) => {
     const term = pair.target.replace(/\s*\([^)]*\)/g, "").toLocaleLowerCase();
