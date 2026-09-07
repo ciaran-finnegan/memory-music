@@ -1,4 +1,4 @@
-import { getLesson } from "./catalog";
+import { getLesson, supportsDirection } from "./catalog";
 import { buildCustomLesson, validateCustomPairs, type CustomPairRow } from "./customLesson";
 import { generateSong, type Song } from "./lyrics";
 import type { MusicStyle } from "./music";
@@ -12,8 +12,8 @@ export interface SungSongRequest {
   customPairs: CustomPairRow[];
 }
 
-const lessonIds: LessonId[] = ["days", "months", "numbers", "custom"];
-const directions: Direction[] = ["en-id", "id-en"];
+const lessonIds: LessonId[] = ["days", "months", "numbers", "latin-future", "custom"];
+const directions: Direction[] = ["en-id", "id-en", "en-la", "la-en"];
 const styles: MusicStyle[] = ["pop", "island", "study"];
 
 function validPair(value: unknown): value is CustomPairRow {
@@ -37,6 +37,9 @@ export function parseSongRequest(value: unknown): SungSongRequest {
     Number.isInteger(input.seed) && Number(input.seed) >= 0 && Number(input.seed) <= 10_000 &&
     customPairs.length <= 12 && customPairs.every(validPair) && customCharacterCount <= 900;
   if (!valid) throw new Error("Invalid song request.");
+  if (input.lessonId !== "custom" && !supportsDirection(getLesson(input.lessonId as LessonId), input.direction as Direction)) {
+    throw new Error("Invalid song request.");
+  }
   if (input.lessonId === "custom" && !validateCustomPairs(customPairs).valid) {
     throw new Error("Invalid song request.");
   }

@@ -1,5 +1,6 @@
 import { parseSongRequest, songFromRequest } from "../../src/domain/songRequest";
-import { buildVocalLyrics, buildVocalPrompt } from "../../src/domain/vocalSong";
+import { buildVocalPrompt } from "../../src/domain/vocalSong";
+import type { SongDraft } from "../../src/domain/songDraft";
 import { runMusicModel } from "../lib/cloudflareAi";
 
 type SongEnv = Env & { AI_API_TOKEN: string };
@@ -26,10 +27,14 @@ export const onRequestPost: PagesFunction<SongEnv> = async ({ request, env }) =>
 
     const input = parseSongRequest(await request.json());
     const cacheKey = await sha256(JSON.stringify(input));
-    const objectKey = `v2/${cacheKey}.mp3`;
+    const objectKey = `v3/${cacheKey}.mp3`;
     if (await env.SONGS.head(objectKey)) {
-      return json({ audioUrl: `/api/song-audio/${cacheKey}`, cached: true });
+      return json({ audioUrl: `/api/song-audio/${cacheKey}?rev=3`, cached: true });
     }
+
+    const draftObject = await env.SONGS.get(`v3/${cacheKey}.json`);
+    if (!draftObject) return json({ error: "Write and review the lyrics first, then produce the song." }, 409);
+    const draft = await draftObject.json<SongDraft>();
 
     const clientIp = request.headers.get("CF-Connecting-IP") ?? "local";
     const day = new Date().toISOString().slice(0, 10);
@@ -39,11 +44,12 @@ export const onRequestPost: PagesFunction<SongEnv> = async ({ request, env }) =>
       return json({ error: "Two new songs per day keeps this free for everyone. Try this song again tomorrow." }, 429);
     }
     const song = songFromRequest(input);
+    await env.SONG_RATE_LIMIT.put(rateKey, String(generatedToday + 1), { expirationTtl: 86_400 });
     const generated = await runMusicModel({
       accountId: env.AI_ACCOUNT_ID,
       apiToken: env.AI_API_TOKEN,
       prompt: buildVocalPrompt(song, input.style),
-      lyrics: buildVocalLyrics(song),
+      lyrics: draft.lyrics,
     });
     const upstreamUrl = generated.result.audio;
 
@@ -58,9 +64,7 @@ export const onRequestPost: PagesFunction<SongEnv> = async ({ request, env }) =>
       },
       customMetadata: { lessonId: input.lessonId, direction: input.direction, style: input.style },
     });
-    await env.SONG_RATE_LIMIT.put(rateKey, String(generatedToday + 1), { expirationTtl: 86_400 });
-
-    return json({ audioUrl: `/api/song-audio/${cacheKey}`, cached: false }, 201);
+    return json({ audioUrl: `/api/song-audio/${cacheKey}?rev=3`, cached: false }, 201);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     if (message === "Invalid song request.") return json({ error: message }, 400);

@@ -1,6 +1,7 @@
 import type { CustomPairRow } from "./customLesson";
 import type { MusicStyle, Tempo } from "./music";
 import type { Direction, LessonId } from "./types";
+import { getLesson, supportsDirection } from "./catalog";
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -16,6 +17,7 @@ export interface Preferences {
   speechEnabled: boolean;
   seed: number;
   customPairs: CustomPairRow[];
+  customLibrary?: Partial<Record<"id" | "la", CustomPairRow[]>>;
 }
 
 export const STORAGE_KEY = "memory-music/preferences";
@@ -42,14 +44,15 @@ function isCustomPair(value: unknown): value is CustomPairRow {
 function isPreferences(value: unknown): value is Preferences {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Record<string, unknown>;
-  const lessonIds: LessonId[] = ["days", "months", "numbers", "custom"];
-  const directions: Direction[] = ["en-id", "id-en"];
+  const lessonIds: LessonId[] = ["days", "months", "numbers", "latin-future", "custom"];
+  const directions: Direction[] = ["en-id", "id-en", "en-la", "la-en"];
   const styles: MusicStyle[] = ["pop", "island", "study"];
   const tempos: Tempo[] = [80, 100, 120];
   return (
     candidate.version === 2 &&
     lessonIds.includes(candidate.lessonId as LessonId) &&
     directions.includes(candidate.direction as Direction) &&
+    (candidate.lessonId === "custom" || supportsDirection(getLesson(candidate.lessonId as LessonId), candidate.direction as Direction)) &&
     styles.includes(candidate.style as MusicStyle) &&
     tempos.includes(candidate.tempo as Tempo) &&
     typeof candidate.speechEnabled === "boolean" &&
@@ -58,6 +61,8 @@ function isPreferences(value: unknown): value is Preferences {
     Array.isArray(candidate.customPairs) &&
     candidate.customPairs.length <= 12 &&
     candidate.customPairs.every(isCustomPair) &&
+    (candidate.customLibrary === undefined || (candidate.customLibrary !== null && typeof candidate.customLibrary === "object" &&
+      Object.entries(candidate.customLibrary).every(([course, rows]) => ["id", "la"].includes(course) && Array.isArray(rows) && rows.length <= 12 && rows.every(isCustomPair)))) &&
     (candidate.lessonId !== "custom" || candidate.customPairs.length >= 2)
   );
 }

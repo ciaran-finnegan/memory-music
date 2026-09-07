@@ -186,7 +186,12 @@ export class MusicPlayer {
       const delay = Math.max(0, (timedLine.startSeconds - fromSeconds) * 1000);
       this.speechTimers.push(window.setTimeout(() => {
         const utterance = new SpeechSynthesisUtterance(line.speech);
-        utterance.lang = line.speechLanguage === "id" ? "id-ID" : "en-US";
+        utterance.lang = { id: "id-ID", en: "en-US", la: "la" }[line.speechLanguage];
+        if (line.speechLanguage === "la") {
+          const voice = window.speechSynthesis.getVoices().find((candidate) => /^la(?:-|$)/i.test(candidate.lang));
+          if (!voice) return;
+          utterance.voice = voice;
+        }
         utterance.rate = plan.bpm === 120 ? 1.05 : plan.bpm === 80 ? 0.82 : 0.94;
         utterance.volume = 0.72;
         window.speechSynthesis.speak(utterance);

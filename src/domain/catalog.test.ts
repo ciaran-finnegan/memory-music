@@ -27,7 +27,7 @@ describe("bilingual lesson catalog", () => {
     expect(numbers.at(-1)?.target).toBe("dua puluh");
   });
 
-  it("exposes exactly the three curated lesson choices", () => {
-    expect(lessons.map((lesson) => lesson.id)).toEqual(["days", "months", "numbers"]);
+  it("exposes the Indonesian lessons and Latin future lesson", () => {
+    expect(lessons.map((lesson) => lesson.id)).toEqual(["days", "months", "numbers", "latin-future"]);
   });
 });

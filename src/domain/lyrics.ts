@@ -31,7 +31,7 @@ export interface GenerateSongInput {
   seed: number;
 }
 
-const callTemplates: Record<Language, Array<(source: string, target: string) => string>> = {
+const callTemplates: Record<"en" | "id", Array<(source: string, target: string) => string>> = {
   en: [
     (source, target) => `${source} is ${target} — clap, clap, hey!`,
     (source, target) => `${source}, ${target} — sing it our way!`,
@@ -62,24 +62,33 @@ export function generateSong({ lesson, direction, seed }: GenerateSongInput): So
   const sourceLanguage = pairs[0]?.sourceLanguage ?? "en";
   const targetLanguage = pairs[0]?.targetLanguage ?? "id";
   const targetName = languageNames[targetLanguage];
-  const lessonName = lesson.shortName[sourceLanguage];
-  const templates = callTemplates[sourceLanguage];
+  const interfaceLanguage = sourceLanguage === "id" ? "id" : "en";
+  const lessonName = lesson.shortName[interfaceLanguage];
+  const templates = callTemplates[interfaceLanguage];
 
   const intro: LyricLine[] = [
     {
       id: "intro-ready",
       kind: "intro",
-      primary: sourceLanguage === "en" ? "Clap-clap, learn it our way!" : "Tepuk-tepuk, nyanyi bersama!",
-      secondary: sourceLanguage === "en" ? `${lessonName} in ${targetName}` : `${lessonName} dalam ${targetName}`,
+      primary: interfaceLanguage === "en" ? "Clap-clap, learn it our way!" : "Tepuk-tepuk, nyanyi bersama!",
+      secondary: interfaceLanguage === "en" ? `${lessonName} in ${targetName}` : `${lessonName} dalam ${targetName}`,
       speechLanguage: sourceLanguage,
       beats: 4,
     },
   ];
 
+  const latinFutureLines = [
+    "Ero — I will be, sing the future with me!",
+    "Eris — you will be, just one you, sing with me!",
+    "Erit — he, she, it will be, clap along, one, two, three!",
+    "Erimus — we will be, all together, you and me!",
+    "Eritis — you will be, you all, a whole group, see!",
+    "Erunt — they will be, now sing the six with me!",
+  ];
   const pairLines: LyricLine[] = pairs.map((pair, index) => ({
     id: `pair-${index}`,
     kind: "pair",
-    primary: templates[(safeSeed + index) % templates.length](pair.source, pair.target),
+    primary: lesson.id === "latin-future" ? latinFutureLines[index] : templates[(safeSeed + index) % templates.length](pair.source, pair.target),
     secondary: `${pair.source}  ↔  ${pair.target}`,
     source: pair.source,
     target: pair.target,
@@ -88,20 +97,21 @@ export function generateSong({ lesson, direction, seed }: GenerateSongInput): So
     beats: 8,
   }));
 
-  const recapLines: LyricLine[] = chunk(pairs.map((pair) => pair.target), 4).map((targets, index) => ({
+  const chorusWords = lesson.id === "latin-future" ? lesson.pairs.map((pair) => pair.la!) : pairs.map((pair) => pair.target);
+  const recapLines: LyricLine[] = chunk(chorusWords, lesson.id === "latin-future" ? 3 : 4).map((targets, index) => ({
     id: `recap-${index}`,
     kind: "recap",
     primary: targets.join(" · "),
-    secondary: sourceLanguage === "en" ? "Chorus — sing it again!" : "Korus — nyanyikan lagi!",
+    secondary: interfaceLanguage === "en" ? "Chorus — sing it again!" : "Korus — nyanyikan lagi!",
     speech: targets.join(", "),
-    speechLanguage: targetLanguage,
+    speechLanguage: lesson.id === "latin-future" ? "la" : targetLanguage,
     beats: 8,
   }));
 
   const outro: LyricLine = {
     id: "outro-challenge",
     kind: "outro",
-    primary: sourceLanguage === "en" ? "One more time — now without looking!" : "Sekali lagi — sekarang tanpa melihat!",
+    primary: interfaceLanguage === "en" ? "One more time — now without looking!" : "Sekali lagi — sekarang tanpa melihat!",
     speechLanguage: sourceLanguage,
     beats: 4,
   };
@@ -109,10 +119,10 @@ export function generateSong({ lesson, direction, seed }: GenerateSongInput): So
   return {
     id: `${lesson.id}-${direction}-${safeSeed}`,
     title:
-      sourceLanguage === "en"
+      interfaceLanguage === "en"
         ? `${lesson.shortName.en} in ${targetName}`
         : `${lesson.shortName.id} dalam bahasa Inggris`,
-    subtitle: sourceLanguage === "en" ? "Learn it in a loop" : "Belajar dengan irama",
+    subtitle: lesson.id === "latin-future" ? "Sum (to be) · future tense · singular → plural" : interfaceLanguage === "en" ? "Learn it in a loop" : "Belajar dengan irama",
     lessonId: lesson.id,
     direction,
     seed: safeSeed,

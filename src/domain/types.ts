@@ -1,10 +1,11 @@
-export type Language = "en" | "id";
-export type Direction = "en-id" | "id-en";
-export type LessonId = "days" | "months" | "numbers" | "custom";
+export type Language = "en" | "id" | "la";
+export type Direction = "en-id" | "id-en" | "en-la" | "la-en";
+export type LessonId = "days" | "months" | "numbers" | "latin-future" | "custom";
 
 export interface LearningPair {
   en: string;
-  id: string;
+  id?: string;
+  la?: string;
 }
 
 export interface DirectedPair {
@@ -16,8 +17,8 @@ export interface DirectedPair {
 
 export interface Lesson {
   id: LessonId;
-  name: Record<Language, string>;
-  shortName: Record<Language, string>;
-  description: Record<Language, string>;
+  name: Record<"en" | "id", string>;
+  shortName: Record<"en" | "id", string>;
+  description: Record<"en" | "id", string>;
   pairs: LearningPair[];
 }

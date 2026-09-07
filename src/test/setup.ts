@@ -12,7 +12,7 @@ const memoryStorage: Storage = {
   setItem: (key, value) => { values.set(key, String(value)); },
 };
 
-Object.defineProperty(window, "localStorage", {
+if (typeof window !== "undefined") Object.defineProperty(window, "localStorage", {
   configurable: true,
   value: memoryStorage,
 });

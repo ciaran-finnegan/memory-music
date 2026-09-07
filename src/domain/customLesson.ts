@@ -53,7 +53,12 @@ export function buildCustomLesson(rows: CustomPairRow[], direction: Direction): 
   const pairs: LearningPair[] = rows.map((row) => {
     const source = row.source.trim();
     const target = row.target.trim();
-    return direction === "en-id" ? { en: source, id: target } : { en: target, id: source };
+    switch (direction) {
+      case "en-la": return { en: source, la: target };
+      case "la-en": return { en: target, la: source };
+      case "en-id": return { en: source, id: target };
+      case "id-en": return { en: target, id: source };
+    }
   });
 
   return {

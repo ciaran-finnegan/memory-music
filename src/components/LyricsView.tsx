@@ -9,16 +9,16 @@ interface LyricsViewProps {
 
 export function LyricsView({ lines, activeLine, onSelect }: LyricsViewProps) {
   return (
-    <section className="lyrics-section" aria-labelledby="lyrics-title">
+    <section className="lyrics-section" aria-labelledby="vocabulary-title">
       <div className="section-heading">
         <div>
-          <h2 id="lyrics-title">Sing-along lyrics</h2>
-          <p>Tap a line to start there.</p>
+          <h2 id="vocabulary-title">Vocabulary & meanings</h2>
+          <p>Your learning notes. Write lyrics to turn them into a song.</p>
         </div>
         <Mic2 aria-hidden="true" size={21} />
       </div>
       <ol className="lyrics-list" aria-live="polite">
-        {lines.map((line, index) => (
+        {lines.map((line, index) => line.kind === "pair" ? (
           <li key={line.id}>
             <button
               className={`lyric-line lyric-${line.kind}`}
@@ -26,15 +26,15 @@ export function LyricsView({ lines, activeLine, onSelect }: LyricsViewProps) {
               type="button"
               onClick={() => onSelect(index)}
               aria-current={index === activeLine ? "true" : undefined}
-              aria-label={`Play from ${line.primary}`}
+              aria-label={`Practice ${line.target}: ${line.source}`}
             >
               <span className="line-number">{String(index + 1).padStart(2, "0")}</span>
               <span className="line-copy">
-                <strong className={line.kind === "pair" ? "pair-lyric" : undefined}>{line.primary}</strong>
+                <strong className="pair-lyric">{line.target}</strong>
                 {line.secondary && (
                   <small>
                     {line.kind === "pair" ? (
-                      <><span>{line.source}</span><span aria-hidden="true"> ↔ </span><span>{line.target}</span></>
+                      <span>{line.source}</span>
                     ) : line.secondary}
                   </small>
                 )}
@@ -42,7 +42,7 @@ export function LyricsView({ lines, activeLine, onSelect }: LyricsViewProps) {
               <span className="line-pulse" aria-hidden="true"><i /><i /><i /></span>
             </button>
           </li>
-        ))}
+        ) : null)}
       </ol>
     </section>
   );

@@ -1,13 +1,14 @@
-import { ArrowLeftRight, Headphones } from "lucide-react";
+import { ArrowLeftRight } from "lucide-react";
 import { languageNames } from "../domain/catalog";
 import type { Direction, Language } from "../domain/types";
 
 interface HeaderProps {
   direction: Direction;
   onSwap: () => void;
+  onCourse: (language: "id" | "la") => void;
 }
 
-export function Header({ direction, onSwap }: HeaderProps) {
+export function Header({ direction, onSwap, onCourse }: HeaderProps) {
   const [source, target] = direction.split("-") as [Language, Language];
   return (
     <header className="site-header">
@@ -29,10 +30,13 @@ export function Header({ direction, onSwap }: HeaderProps) {
         <span className="language-name target-language">{languageNames[target]}</span>
       </div>
 
-      <div className="headphone-note">
-        <Headphones aria-hidden="true" size={18} />
-        <span>Headphones help</span>
-      </div>
+      <label className="course-picker">
+        <span>Language course</span>
+        <select aria-label="Language course" value={direction.includes("la") ? "la" : "id"} onChange={(event) => onCourse(event.target.value as "id" | "la")}>
+          <option value="id">English ↔ Indonesian</option>
+          <option value="la">English ↔ Latin</option>
+        </select>
+      </label>
     </header>
   );
 }

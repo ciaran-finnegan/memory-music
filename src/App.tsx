@@ -1,7 +1,8 @@
 import { Music2, RefreshCw, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MusicPlayer } from "./audio/MusicPlayer";
-import { requestSungSong } from "./audio/SungSongClient";
+import { requestLyrics, requestSungSong } from "./audio/SungSongClient";
+import type { SongDraft } from "./domain/songDraft";
 import { CassettePlayer } from "./components/CassettePlayer";
 import { CustomLessonDialog } from "./components/CustomLessonDialog";
 import { Header } from "./components/Header";
@@ -29,12 +30,14 @@ export default function App() {
   const [activeLine, setActiveLine] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [sungStatus, setSungStatus] = useState<SungSongStatus>("idle");
+  const [draft, setDraft] = useState<SongDraft | null>(null);
   const [sungAudioUrl, setSungAudioUrl] = useState<string | null>(null);
   const [sungError, setSungError] = useState<string | null>(null);
   const [sungProgress, setSungProgress] = useState(0);
   const [isSungPlaying, setIsSungPlaying] = useState(false);
   const playerRef = useRef<MusicPlayer | null>(null);
   const sungAudioRef = useRef<HTMLAudioElement | null>(null);
+  const sungRequestId = useRef(0);
   const [sourceLanguage, targetLanguage] = preferences.direction.split("-") as [Language, Language];
 
   const lesson: Lesson = useMemo(() => {
@@ -77,8 +80,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    sungRequestId.current += 1;
     sungAudioRef.current?.pause();
     setSungStatus("idle");
+    setDraft(null);
     setSungAudioUrl(null);
     setSungError(null);
     setSungProgress(0);
@@ -86,6 +91,7 @@ export default function App() {
   }, [song, preferences.style]);
 
   const updatePreferences = (change: Partial<Preferences>) => {
+    if (change.direction !== undefined || change.lessonId !== undefined || change.style !== undefined || change.seed !== undefined || change.customPairs !== undefined) sungRequestId.current += 1;
     stopPlayback();
     setPracticeOpen(false);
     setPreferences((current) => ({ ...current, ...change }));
@@ -93,6 +99,7 @@ export default function App() {
 
   const startAt = async (lineIndex: number) => {
     if (!audioSupported) return;
+    sungAudioRef.current?.pause();
     const player = playerRef.current ?? new MusicPlayer();
     playerRef.current = player;
     setActiveLine(lineIndex);
@@ -113,15 +120,13 @@ export default function App() {
     }
   };
 
-  const selectLesson = (id: "days" | "months" | "numbers") => {
+  const selectLesson = (id: Exclude<LessonId, "custom">) => {
     updatePreferences({ lessonId: id });
   };
 
   const swapLanguages = () => {
     const nextDirection = reverseDirection(preferences.direction);
-    const nextCustomPairs = preferences.lessonId === "custom"
-      ? preferences.customPairs.map((row) => ({ source: row.target, target: row.source }))
-      : preferences.customPairs;
+    const nextCustomPairs = preferences.customPairs.map((row) => ({ source: row.target, target: row.source }));
     updatePreferences({ direction: nextDirection, customPairs: nextCustomPairs });
   };
 
@@ -130,11 +135,11 @@ export default function App() {
     setCustomOpen(false);
   };
 
-  const interfaceCopy = sourceLanguage === "en"
+  const interfaceCopy = sourceLanguage !== "id"
     ? {
-        kicker: "A tiny song for a lasting memory",
+        kicker: "Songs worth remembering",
         headline: "Your next earworm is a lesson.",
-        intro: "Choose a topic, press play, and let rhythm do the remembering.",
+        intro: "Choose a lesson. Write the lyrics. Make it a song you want to replay.",
         pick: "Pick your lesson",
         nowLearning: "Now learning",
       }
@@ -155,22 +160,42 @@ export default function App() {
     }
   };
 
+  const songRequest = () => ({
+    lessonId: lesson.id, direction: preferences.direction, style: preferences.style,
+    seed: preferences.seed, customPairs: lesson.id === "custom" ? preferences.customPairs : [],
+  });
+
+  const writeLyrics = async () => {
+    const requestId = ++sungRequestId.current;
+    stopPlayback();
+    sungAudioRef.current?.pause();
+    setSungStatus("writing");
+    setSungError(null);
+    try {
+      const nextDraft = await requestLyrics(songRequest());
+      if (requestId !== sungRequestId.current) return;
+      setDraft(nextDraft);
+      setSungStatus("draft");
+    } catch (error) {
+      if (requestId !== sungRequestId.current) return;
+      setSungStatus("error");
+      setSungError(error instanceof Error ? error.message : "Could not write the lyrics.");
+    }
+  };
+
   const generateSungSong = async () => {
+    const requestId = ++sungRequestId.current;
     stopPlayback();
     sungAudioRef.current?.pause();
     setSungStatus("generating");
     setSungError(null);
     try {
-      const audioUrl = await requestSungSong({
-        lessonId: lesson.id,
-        direction: preferences.direction,
-        style: preferences.style,
-        seed: preferences.seed,
-        customPairs: lesson.id === "custom" ? preferences.customPairs : [],
-      });
+      const audioUrl = await requestSungSong(songRequest());
+      if (requestId !== sungRequestId.current) return;
       setSungAudioUrl(audioUrl);
       setSungStatus("ready");
     } catch (error) {
+      if (requestId !== sungRequestId.current) return;
       setSungStatus("error");
       setSungError(error instanceof Error ? error.message : "The singer could not finish that take.");
     }
@@ -181,7 +206,6 @@ export default function App() {
     if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
     const nextProgress = audio.currentTime / audio.duration;
     setSungProgress(nextProgress);
-    setActiveLine(Math.min(song.lines.length - 1, Math.floor(nextProgress * song.lines.length)));
   };
 
   const seekLine = (index: number) => {
@@ -194,11 +218,16 @@ export default function App() {
 
   const practiceProgress = musicPlan.durationSeconds ? elapsed / musicPlan.durationSeconds : 0;
   const progress = isSungPlaying || sungProgress > 0 ? sungProgress : practiceProgress;
-  const targetFlag = targetLanguage === "id" ? "ID" : "EN";
+  const targetFlag = targetLanguage.toUpperCase();
 
   return (
     <div className="app-shell">
-      <Header direction={preferences.direction} onSwap={swapLanguages} />
+      <Header direction={preferences.direction} onSwap={swapLanguages} onCourse={(language) => {
+        const currentCourse = preferences.direction.includes("la") ? "la" : "id";
+        const canonicalRows = sourceLanguage === "en" ? preferences.customPairs : preferences.customPairs.map((row) => ({ source: row.target, target: row.source }));
+        const customLibrary = { ...preferences.customLibrary, [currentCourse]: canonicalRows };
+        updatePreferences({ direction: language === "la" ? "en-la" : "en-id", lessonId: language === "la" ? "latin-future" : "days", seed: 0, customPairs: customLibrary[language] ?? [], customLibrary });
+      }} />
       <main className="app-layout" id="studio">
         <aside className="lesson-sidebar">
           <div className="intro-copy">
@@ -210,6 +239,7 @@ export default function App() {
           <LessonPicker
             activeId={preferences.lessonId as LessonId}
             language={sourceLanguage}
+            direction={preferences.direction}
             onSelect={selectLesson}
             onCustom={() => setCustomOpen(true)}
           />
@@ -228,7 +258,7 @@ export default function App() {
               <p>{song.subtitle} · {lesson.pairs.length} word{lesson.pairs.length === 1 ? "" : "s"}</p>
             </div>
             <button className="variation-button" type="button" onClick={() => updatePreferences({ seed: preferences.seed + 1 })}>
-              <RefreshCw aria-hidden="true" size={17} /> Mix lyrics
+              <RefreshCw aria-hidden="true" size={17} /> New version
             </button>
           </div>
 
@@ -236,15 +266,25 @@ export default function App() {
             <div>
               <CassettePlayer song={song} progress={progress} isPlaying={isPlaying || isSungPlaying} />
               <div className="now-singing" aria-live="polite">
-                <span>{isSungPlaying || isPlaying ? "NOW SINGING" : "LYRIC PREVIEW"}</span>
-                <strong>{song.lines[activeLine]?.primary}</strong>
+                <span>{isSungPlaying ? "NOW PLAYING" : draft ? "LYRICS READY" : "YOUR LESSON"}</span>
+                <strong>{draft?.title ?? song.title}</strong>
               </div>
+              <label className="song-style-picker">
+                <span>Sound</span>
+                <select aria-label="Song style" value={preferences.style} onChange={(event) => updatePreferences({ style: event.target.value as Preferences["style"] })}>
+                  <option value="pop">Alternative pop</option>
+                  <option value="island">Neo-soul</option>
+                  <option value="study">Indie folk</option>
+                </select>
+              </label>
               <SungSongPanel
                 status={sungStatus}
                 audioUrl={sungAudioUrl}
                 error={sungError}
                 audioRef={sungAudioRef}
                 onGenerate={() => void generateSungSong()}
+                onWrite={() => void writeLyrics()}
+                hasDraft={draft !== null}
                 onPlay={() => {
                   stopPlayback(false);
                   setIsSungPlaying(true);
@@ -257,7 +297,7 @@ export default function App() {
                 }}
                 onTimeUpdate={updateSungProgress}
               />
-              <SongControls
+              <details className="practice-options"><summary>Optional pronunciation & rhythm practice</summary><SongControls
                 style={preferences.style}
                 tempo={preferences.tempo}
                 speechEnabled={preferences.speechEnabled}
@@ -273,17 +313,21 @@ export default function App() {
                   if (audioSupported) void startAt(0);
                 }}
                 onRegenerate={() => updatePreferences({ seed: preferences.seed + 1 })}
-              />
+              /></details>
             </div>
             {practiceOpen ? (
               <PracticePanel pairs={directedPairs} seed={preferences.seed} onClose={() => setPracticeOpen(false)} />
-            ) : (
-              <LyricsView lines={song.lines} activeLine={activeLine} onSelect={seekLine} />
-            )}
+            ) : draft ? (
+              <section className="lyrics-section" aria-labelledby="lyrics-title">
+                <div className="section-heading"><div><h2 id="lyrics-title">{draft.title}</h2><p>Full song lyrics · read along at your own pace</p></div></div>
+                <div className="written-lyrics">{draft.lyrics.split("\n").map((line, index) => /^\[.*\]$/.test(line.trim()) ? <h3 key={index}>{line.replace(/[\[\]]/g, "")}</h3> : <p key={index}>{line || "\u00a0"}</p>)}</div>
+                <details className="vocabulary-details"><summary>Vocabulary & meanings</summary><LyricsView lines={song.lines} activeLine={activeLine} onSelect={seekLine} /></details>
+              </section>
+            ) : <LyricsView lines={song.lines} activeLine={activeLine} onSelect={seekLine} />}
           </div>
 
           <div className="studio-actions">
-            <p><Sparkles aria-hidden="true" size={18} /> The target words stay exact. Only the rhythm and connecting lyrics change.</p>
+            <p><Sparkles aria-hidden="true" size={18} /> Review your lyrics first. Produce the recording when you are ready.</p>
             <button className="practice-button" type="button" onClick={() => setPracticeOpen((current) => !current)}>
               {practiceOpen ? "Show lyrics" : "Practice"}
             </button>

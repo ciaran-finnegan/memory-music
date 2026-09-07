@@ -15,7 +15,8 @@ function parseRange(value: string, size: number): { offset: number; length: numb
 export const onRequestGet: PagesFunction<Env, "key"> = async ({ request, env, params }) => {
   const key = String(params.key ?? "");
   if (!/^[a-f0-9]{64}$/.test(key)) return new Response("Not found", { status: 404 });
-  const objectKey = `v2/${key}.mp3`;
+  const version = new URL(request.url).searchParams.get("rev") === "3" ? "v3" : "v2";
+  const objectKey = `${version}/${key}.mp3`;
   const head = await env.SONGS.head(objectKey);
   if (!head) return new Response("Not found", { status: 404 });
 

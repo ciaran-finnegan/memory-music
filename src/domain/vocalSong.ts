@@ -1,10 +1,12 @@
 import type { Song } from "./lyrics";
 import type { MusicStyle } from "./music";
+import { languageNames } from "./catalog";
+import type { Language } from "./types";
 
 const stylePrompts: Record<MusicStyle, string> = {
-  pop: "bright bubblegum pop with handclaps, bouncy bass, playful synths, and an irresistible sing-along hook",
-  island: "sunny tropical pop with ukulele, hand percussion, warm bass, and a joyful call-and-response hook",
-  study: "gentle dreamy indie pop with soft drums, glockenspiel, warm keys, and a calm memorable hook",
+  pop: "contemporary alternative pop, 108 BPM, syncopated live bass, tight drums, textured analog synths, a minor-key verse opening into a harmonically rich chorus",
+  island: "laid-back neo-soul, 94 BPM, a deep pocket with swung drums, warm Rhodes seventh and ninth chords, restrained guitar, fluid melodic bass",
+  study: "intimate indie folk, 86 BPM, fingerpicked acoustic guitar, subtle brushed drums, warm low strings, close-miked vocals and an understated memorable melody",
 };
 
 export function buildVocalLyrics(song: Song): string {
@@ -30,11 +32,12 @@ export function buildVocalLyrics(song: Song): string {
 }
 
 export function buildVocalPrompt(song: Song, style: MusicStyle): string {
-  const direction = song.direction === "en-id" ? "English and Indonesian" : "Indonesian and English";
+  const direction = song.direction.split("-").map((language) => language === "id" ? "Indonesian" : languageNames[language as Language]).join(" and ");
   return [
-    `A catchy educational ${stylePrompts[style]}.`,
-    `Friendly lead vocals with a small group answering in the chorus. Use clear ${direction} pronunciation.`,
-    "Make the vocabulary the rhythmic hook, leave tiny gaps for learners to echo, and keep the arrangement concise and fun.",
-    "Around 112 BPM in a bright major key. Start singing within two seconds and finish cleanly after the final lyric.",
+    `Produce a fully realized original song for teen and adult listeners: ${stylePrompts[style]}.`,
+    `Expressive adult lead vocals, natural phrasing, clear ${direction} pronunciation, a compelling melodic hook with tasteful harmony vocals only at the chorus peaks.`,
+    ...(song.direction.includes("la") ? ["Sing actual Latin, never Spanish or Italian. Use clear Classical Latin vowels. Keep all Latin forms exactly as written and in order; pronounce ero EH-roh, eris EH-riss, erit EH-ritt, erimus EH-rih-mooss, eritis EH-rih-tiss, erunt EH-roont."] : []),
+    "Shape a dynamic arrangement: sparse first verse, rising pre-chorus, wider chorus, a contrasting bridge or breakdown, then a developed final chorus. Vary melody and instrumentation; let phrases breathe. Sing the supplied lyrics exactly.",
+    "Start the lead vocal within three seconds. Aim for 90–150 seconds and end cleanly. Avoid nursery-song melody, children's choir, novelty sound effects, chirpy voices, stock handclaps, toy instruments, and endless repeated loops. This should sound like a contemporary record people would choose to replay.",
   ].join(" ");
 }

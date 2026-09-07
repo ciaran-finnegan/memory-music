@@ -17,8 +17,8 @@ describe("sung song arrangement", () => {
     }
   });
 
-  it("asks for a catchy educational vocal with clear bilingual pronunciation", () => {
-    expect(buildVocalPrompt(song, "pop")).toMatch(/catchy.*educational/i);
+  it("asks for an adult vocal arrangement with clear bilingual pronunciation", () => {
+    expect(buildVocalPrompt(song, "pop")).toMatch(/adult listeners/i);
     expect(buildVocalPrompt(song, "pop")).toMatch(/English.*Indonesian/i);
     expect(buildVocalPrompt(song, "pop")).toMatch(/vocals/i);
   });

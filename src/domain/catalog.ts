@@ -3,6 +3,7 @@ import type { Direction, DirectedPair, Language, Lesson, LessonId } from "./type
 export const languageNames: Record<Language, string> = {
   en: "English",
   id: "Bahasa Indonesia",
+  la: "Latin",
 };
 
 export const lessons: Lesson[] = [
@@ -71,6 +72,27 @@ export const lessons: Lesson[] = [
   },
 ];
 
+// Forms and meanings: https://www.nationalarchives.gov.uk/latin/stage-2-latin/lessons/lesson-15-future-simple-tense/
+lessons.push({
+  id: "latin-future",
+  name: { en: "Sum — future tense", id: "Sum — bentuk masa depan" },
+  shortName: { en: "To be: future", id: "Sum: masa depan" },
+  description: { en: "Ero, eris, erit… · I will be", id: "Ero, eris, erit…" },
+  pairs: [
+    { en: "I will be", la: "ero" },
+    { en: "you will be (singular)", la: "eris" },
+    { en: "he, she, or it will be", la: "erit" },
+    { en: "we will be", la: "erimus" },
+    { en: "you will be (plural)", la: "eritis" },
+    { en: "they will be", la: "erunt" },
+  ],
+});
+
+export function supportsDirection(lesson: Lesson, direction: Direction): boolean {
+  const [source, target] = direction.split("-") as [Language, Language];
+  return lesson.pairs.every((pair) => Boolean(pair[source] && pair[target]));
+}
+
 export function getLesson(id: LessonId): Lesson {
   const lesson = lessons.find((candidate) => candidate.id === id);
   if (!lesson) {
@@ -80,15 +102,17 @@ export function getLesson(id: LessonId): Lesson {
 }
 
 export function getDirectedPairs(lesson: Lesson, direction: Direction): DirectedPair[] {
+  if (!supportsDirection(lesson, direction)) throw new Error("This lesson is not available in that language.");
   const [sourceLanguage, targetLanguage] = direction.split("-") as [Language, Language];
   return lesson.pairs.map((pair) => ({
-    source: pair[sourceLanguage],
-    target: pair[targetLanguage],
+    source: pair[sourceLanguage]!,
+    target: pair[targetLanguage]!,
     sourceLanguage,
     targetLanguage,
   }));
 }
 
 export function reverseDirection(direction: Direction): Direction {
-  return direction === "en-id" ? "id-en" : "en-id";
+  const reversed: Record<Direction, Direction> = { "en-id": "id-en", "id-en": "en-id", "en-la": "la-en", "la-en": "en-la" };
+  return reversed[direction];
 }

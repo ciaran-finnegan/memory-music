@@ -17,9 +17,9 @@ interface SongControlsProps {
 }
 
 const styles: Array<{ value: MusicStyle; label: string }> = [
-  { value: "pop", label: "Bubblegum pop" },
-  { value: "island", label: "Sunny island" },
-  { value: "study", label: "Dreamy study" },
+  { value: "pop", label: "Alternative pop" },
+  { value: "island", label: "Neo-soul" },
+  { value: "study", label: "Indie folk" },
 ];
 
 export function SongControls(props: SongControlsProps) {
@@ -33,7 +33,7 @@ export function SongControls(props: SongControlsProps) {
           </select>
         </label>
         <label>
-          <span>Tempo</span>
+          <span>Practice tempo</span>
           <select value={props.tempo} onChange={(event) => props.onTempo(Number(event.target.value) as Tempo)}>
             <option value={80}>Easy · 80</option>
             <option value={100}>Steady · 100</option>

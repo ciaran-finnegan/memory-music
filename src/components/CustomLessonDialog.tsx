@@ -19,7 +19,8 @@ export function CustomLessonDialog({ direction, initialRows, onClose, onSave }: 
   const firstInputRef = useRef<HTMLInputElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const validation = useMemo(() => validateCustomPairs(rows), [rows]);
-  const languageLabel = (language: Language) => language === "en" ? "English" : "Indonesian";
+  const languageLabel = (language: Language) => ({ en: "English", id: "Indonesian", la: "Latin" })[language];
+  const placeholder = (language: Language) => ({ en: "e.g. I will be", id: "mis. merah", la: "e.g. ero" })[language];
 
   useEffect(() => {
     previousFocusRef.current = document.activeElement as HTMLElement | null;
@@ -59,11 +60,11 @@ export function CustomLessonDialog({ direction, initialRows, onClose, onSave }: 
             <div className="custom-row" key={index}>
               <label>
                 <span>{languageLabel(sourceLanguage)} word {index + 1}</span>
-                <input maxLength={80} ref={index === 0 ? firstInputRef : undefined} value={row.source} onChange={(event) => changeRow(index, "source", event.target.value)} placeholder={sourceLanguage === "en" ? "e.g. red" : "mis. merah"} />
+                <input maxLength={80} ref={index === 0 ? firstInputRef : undefined} value={row.source} onChange={(event) => changeRow(index, "source", event.target.value)} placeholder={placeholder(sourceLanguage)} />
               </label>
               <label>
                 <span>{languageLabel(targetLanguage)} word {index + 1}</span>
-                <input maxLength={80} value={row.target} onChange={(event) => changeRow(index, "target", event.target.value)} placeholder={targetLanguage === "id" ? "mis. merah" : "e.g. red"} />
+                <input maxLength={80} value={row.target} onChange={(event) => changeRow(index, "target", event.target.value)} placeholder={placeholder(targetLanguage)} />
               </label>
               <button type="button" className="remove-row" onClick={() => setRows((current) => current.filter((_, rowIndex) => rowIndex !== index))} disabled={rows.length <= 2} aria-label={`Remove word pair ${index + 1}`}>
                 <Trash2 aria-hidden="true" size={18} />

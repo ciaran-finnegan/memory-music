@@ -39,6 +39,10 @@ a { color: inherit; }
 .language-route button { width: 44px; height: 44px; flex: 0 0 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--pool); }
 .language-route button:hover { background: var(--mango); }
 .headphone-note { justify-self: end; display: flex; gap: 7px; align-items: center; color: var(--muted); font-size: 0.8rem; font-weight: 750; }
+.headphone-note[hidden] { display: none; }
+.course-picker { justify-self: end; display: grid; gap: 4px; min-width: 0; font-size: 0.7rem; font-weight: 800; }
+.course-picker select { max-width: 100%; min-height: 44px; border: 1.5px solid var(--ink); border-radius: 10px; padding: 0 10px; background: var(--white); font-size: 0.8rem; }
+@media (max-width: 1050px) { .site-header .course-picker { grid-column: 1 / -1; width: 100%; justify-self: stretch; padding-bottom: 12px; } }
 
 .app-layout { display: grid; grid-template-columns: minmax(230px, 300px) minmax(0, 1fr); gap: clamp(28px, 4vw, 64px); padding: 54px 0 38px; }
 .lesson-sidebar { min-width: 0; }
@@ -110,6 +114,16 @@ a { color: inherit; }
 .sung-audio { display: block; width: 100%; height: 48px; margin-top: 13px; }
 .sung-song-card .generation-note { margin: 11px 0 0; color: var(--ink); font-weight: 750; }
 .sung-song-card .generation-error { margin: 11px 0 0; padding: 9px 10px; color: #7a2524; background: #ffe3df; border-radius: 8px; font-weight: 800; }
+.song-style-picker { display: grid; gap: 6px; margin-top: 24px; font-size: 0.8rem; font-weight: 850; }
+.song-style-picker select { min-height: 46px; padding: 8px 12px; border: 1.5px solid var(--ink); border-radius: 10px; background: white; }
+.practice-options { margin-top: 24px; font-size: 0.75rem; }
+.practice-options summary, .vocabulary-details summary { cursor: pointer; min-height: 44px; padding-block: 12px; }
+.written-lyrics { line-height: 1.6; font-size: 0.96rem; overflow-wrap: anywhere; }
+.written-lyrics h3 { color: #8f2d2c; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; margin: 26px 0 12px; }
+.written-lyrics p { margin: 0 0 5px; }
+.vocabulary-details { margin-top: 28px; border-top: 1px solid var(--line); }
+.vocabulary-details .lyrics-section { padding: 12px 0; }
+.sung-song-card .cost-note { margin-top: 12px; font-size: 0.69rem; }
 
 .song-controls { margin-top: 24px; }
 .control-fields { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; }

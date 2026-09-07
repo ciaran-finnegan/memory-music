@@ -1,6 +1,18 @@
 import type { SungSongRequest } from "../domain/songRequest";
+import type { SongDraft } from "../domain/songDraft";
 
 type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
+export async function requestLyrics(input: SungSongRequest, fetcher: Fetcher = fetch): Promise<SongDraft> {
+  const response = await fetcher("/api/lyrics", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input),
+  });
+  const body = await response.json() as SongDraft & { error?: string };
+  if (!response.ok || typeof body.lyrics !== "string" || typeof body.title !== "string") {
+    throw new Error(body.error ?? "The songwriter could not finish that draft.");
+  }
+  return body;
+}
 
 export async function requestSungSong(input: SungSongRequest, fetcher: Fetcher = fetch): Promise<string> {
   const response = await fetcher("/api/song", {

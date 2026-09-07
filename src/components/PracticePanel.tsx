@@ -18,7 +18,7 @@ export function PracticePanel({ pairs, seed, onClose }: PracticePanelProps) {
   const question = questions[index];
   const targetLanguage = pairs[0]?.targetLanguage ?? "id";
   const sourceLanguage = pairs[0]?.sourceLanguage ?? "en";
-  const targetName: Record<Language, string> = { en: "English", id: "Indonesian" };
+  const targetName: Record<Language, string> = { en: "English", id: "Indonesian", la: "Latin" };
 
   const choose = (answer: string) => {
     if (selected || !question) return;

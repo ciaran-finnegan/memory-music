@@ -1,4 +1,4 @@
-const CACHE_NAME = "memory-music-shell-v2";
+const CACHE_NAME = "memory-music-shell-v3";
 const APP_SHELL = ["/", "/index.html", "/manifest.webmanifest", "/icon.svg", "/maskable-icon.svg"];
 
 self.addEventListener("install", (event) => {
